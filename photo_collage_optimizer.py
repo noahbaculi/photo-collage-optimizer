@@ -4,6 +4,13 @@ import math
 
 
 def calc_collage():
+    global num_rows
+    global num_max_photos
+    global photo_height
+    global photo_width
+    global collage_aspect_ratio_list
+    global desired_collage_h_to_w_ratio
+    global canvas_widget
     try:
         num_min_photos = float(num_min_photos_input.get())
     except ValueError:
@@ -22,8 +29,7 @@ def calc_collage():
         photo_height = float(photo_height_input.get())
     except ValueError:
         popup_window_input = Tk()
-        Label(popup_window_input, text="Please enter a valid number for the height of the photos.").grid(row=0,
-                                                                                                         column=0)
+        Label(popup_window_input, text="Please enter a valid number for the height of the photos.").grid(row=0, column=0)
         popup_window_input.mainloop()
 
     try:
@@ -37,16 +43,14 @@ def calc_collage():
         desire_collage_aspect_ratio_height = float(desire_collage_aspect_ratio_height_input.get())
     except ValueError:
         popup_window_input = Tk()
-        Label(popup_window_input, text="Please enter a valid number for the aspect height of the collage.").grid(row=0,
-                                                                                                                 column=0)
+        Label(popup_window_input, text="Please enter a valid number for the aspect height of the collage.").grid(row=0, column=0)
         popup_window_input.mainloop()
 
     try:
         desire_collage_aspect_ratio_width = float(desire_collage_aspect_ratio_width_input.get())
     except ValueError:
         popup_window_input = Tk()
-        Label(popup_window_input, text="Please enter a valid number for the aspect height of the collage.").grid(row=0,
-                                                                                                                 column=0)
+        Label(popup_window_input, text="Please enter a valid number for the aspect height of the collage.").grid(row=0, column=0)
         popup_window_input.mainloop()
 
     desired_collage_h_to_w_ratio = desire_collage_aspect_ratio_height / desire_collage_aspect_ratio_width
@@ -75,7 +79,7 @@ def calc_collage():
         num_rows, num_photos_width, num_max_photos - (num_max_photos % num_rows), num_max_photos)
     output_text_line_2 = "The resulting collage is %.2f\" high %.2f\" wide.\n" % (collage_height, collage_width)
     output_text_line_3 = "Actual aspect ratio of %.2f compared to the desired %.2f." % (
-    collage_height / collage_width, desired_collage_h_to_w_ratio)
+        collage_height / collage_width, desired_collage_h_to_w_ratio)
 
     output_text_all_lines = output_text_line_1 + output_text_line_2 + output_text_line_3
 
@@ -83,11 +87,14 @@ def calc_collage():
     output_text.insert(END, output_text_all_lines)
     output_text.grid(row=3, column=0, columnspan=100)
 
+    Button(window, text="Add row", command=add_row).grid(row=4, column=0)
+    Button(window, text="Subtract row", command=subtract_row).grid(row=4, column=1)
+
     vis_scale = 10
     vis_padding = vis_scale
-    w = Canvas(window, width=int(2 * vis_padding + vis_scale * collage_width),
-               height=int(2 * vis_padding + vis_scale * collage_height))
-    w.grid(row=4, column=0, columnspan=100)
+    canvas_widget = Canvas(window, width=int(2 * vis_padding + vis_scale * collage_width),
+                           height=int(2 * vis_padding + vis_scale * collage_height))
+    canvas_widget.grid(row=5, column=0, columnspan=100)
     # w.create_rectangle(0, 0, int(2*vis_padding+vis_scale*collage_width), int(2*vis_padding+vis_scale*collage_height), fill="aqua")
 
     # w.create_rectangle(x1, y1, x2, y2, fill="")
@@ -99,10 +106,71 @@ def calc_collage():
             end_x = start_x + photo_width
             end_y = start_y + photo_height
 
-            w.create_rectangle(vis_scale * start_x, vis_scale * start_y, vis_scale * end_x, vis_scale * end_y, fill="")
+            canvas_widget.create_rectangle(vis_scale * start_x, vis_scale * start_y, vis_scale * end_x,
+                                           vis_scale * end_y, fill="")
+
+
+def recalc_collage():
+    global num_max_photos
+    global photo_height
+    global photo_width
+    global collage_aspect_ratio_list
+    global desired_collage_h_to_w_ratio
+    global canvas_widget
+    num_photos_width = math.floor(num_max_photos / num_rows)
+    collage_height = num_rows * photo_height
+    collage_width = num_photos_width * photo_width
+    collage_aspect_ratio_list.append(collage_height / collage_width)
+
+    output_text_line_1 = "Organizing the photos into %i rows of %i photos utilizes %i of the maximum %i photos.\n" % (
+        num_rows, num_photos_width, num_max_photos - (num_max_photos % num_rows), num_max_photos)
+    output_text_line_2 = "The resulting collage is %.2f\" high %.2f\" wide.\n" % (collage_height, collage_width)
+    output_text_line_3 = "Actual aspect ratio of %.2f compared to the desired %.2f." % (
+        collage_height / collage_width, desired_collage_h_to_w_ratio)
+
+    output_text_all_lines = output_text_line_1 + output_text_line_2 + output_text_line_3
+
+    output_text = Text(window, width=85, height=3)
+    output_text.insert(END, output_text_all_lines)
+    output_text.grid(row=3, column=0, columnspan=100)
+
+    Button(window, text="Add row", command=add_row).grid(row=4, column=0)
+    Button(window, text="Subtract row", command=subtract_row).grid(row=4, column=1)
+
+    vis_scale = 10
+    vis_padding = vis_scale
+    canvas_widget.delete("all")
+    canvas_widget = Canvas(window, width=int(2 * vis_padding + vis_scale * collage_width),
+                           height=int(2 * vis_padding + vis_scale * collage_height))
+    canvas_widget.grid(row=5, column=0, columnspan=100)
+
+    for row in range(num_rows):
+        for col in range(num_photos_width):
+            start_x = 1 + (photo_width * col)
+            start_y = 1 + (photo_height * row)
+            end_x = start_x + photo_width
+            end_y = start_y + photo_height
+
+            canvas_widget.create_rectangle(vis_scale * start_x, vis_scale * start_y, vis_scale * end_x,
+                                           vis_scale * end_y, fill="")
+
+
+def add_row():
+    global num_rows
+    if num_rows != num_max_photos - 1:
+        num_rows += 1
+        recalc_collage()
+
+
+def subtract_row():
+    global num_rows
+    if num_rows != 1:
+        num_rows -= 1
+        recalc_collage()
 
 
 window = Tk()
+window.wm_title("Collage Optimizer")  # name window
 
 Label(window, text="Minimum number of photos").grid(row=0, column=0)
 num_min_photos_input = Entry(window, width=6)
